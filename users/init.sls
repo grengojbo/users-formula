@@ -5,7 +5,9 @@ include:
 {% if user == None %}
 {% set user = {} %}
 {% endif %}
-{% set home = user.get('home', "/home/%s" % name) %}
+{% set home_root = pillar.get('home_root', '/home/') %}
+{% set home_mode = pillar.get('home_mode', 0755) %}
+{% set home = user.get('home', "{0}{1}".format(home_root, name)) %}
 
 {% for group in user.get('groups', []) %}
 {{ group }}_group:
@@ -19,7 +21,7 @@ include:
     - name: {{ home }}
     - user: {{ name }}
     - group: {{ name }}
-    - mode: 0755
+    - mode: {{ home_mode ))
     - require:
       - user: {{ name }}
       - group: {{ name }}
@@ -31,6 +33,9 @@ include:
     - shell: {{ pillar.get('shell', '/bin/bash') }}
     {% if 'uid' in user -%}
     - uid: {{ user['uid'] }}
+    {% endif %}
+    {% if 'gid' in user -%}
+    - gid: {{ user['gid'] }}
     {% endif %}
     - gid_from_name: True
     {% if 'fullname' in user %}
@@ -60,6 +65,20 @@ user_keydir_{{ name }}:
       {% for group in user.get('groups', []) %}
       - group: {{ group }}
       {% endfor %}
+
+{{ home }}/bin:
+  file.directory:
+    - makedirs: True
+    - user: {{ name }}
+    - group: {{ name }}
+    - makedirs: True
+    - dir_mode: 775
+    - recurse:
+      - user
+      - group
+      - mode
+    - require:
+      - user: {{ name }}
 
   {% if 'privkey' in user %}
 user_{{ name }}_private_key:
