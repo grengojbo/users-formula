@@ -137,3 +137,15 @@ sudoer-{{ name }}:
 {{ user }}:
   user.absent
 {% endfor %}
+
+dotfiles:
+  git.latest:
+    - name: https://github.com/grengojbo/dotfiles.git
+    - target: {{ home }}/dotfiles
+    - runas: {{ name }}
+    - rev: master
+    - force: True
+    - force_checkout: True
+#    - unless: file {{ root }}/.git/config
+    - require:
+      - file: {{ home }}/dotfiles
