@@ -21,7 +21,7 @@ include:
     - name: {{ home }}
     - user: {{ name }}
     - group: {{ name }}
-    - mode: {{ home_mode ))
+    - mode: {{ home_mode }}
     - require:
       - user: {{ name }}
       - group: {{ name }}
