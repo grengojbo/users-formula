@@ -143,6 +143,14 @@ dotfiles:
       - file: {{ name }}_user
       - user: {{ name }}_user
 
+{% for dotfile in {'.ackrc', '.bash_aliases', '.gitconfig', '.hgrc', '.synergy.conf', '.tmux.conf', '.vimrc'} %}
+{{ home }}/{{ dotfile }}:
+  file.symlink:
+    - target: {{ home }}/dotfiles/{{ dotfile }}
+    - require:
+      - git: dotfiles
+{% endfor %}
+
 {% endfor %}
 
 {% for user in pillar.get('absent_users', []) %}
