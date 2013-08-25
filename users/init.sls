@@ -139,10 +139,9 @@ dotfiles:
     - rev: master
     - force: True
     - force_checkout: True
-#    - unless: file {{ root }}/.git/config
     - require:
       - file: {{ home }}/dotfiles
-      
+
 {% endfor %}
 
 {% for user in pillar.get('absent_users', []) %}
