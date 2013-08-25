@@ -131,13 +131,6 @@ sudoer-{{ name }}:
 
 {% endif %}
 
-{% endfor %}
-
-{% for user in pillar.get('absent_users', []) %}
-{{ user }}:
-  user.absent
-{% endfor %}
-
 dotfiles:
   git.latest:
     - name: https://github.com/grengojbo/dotfiles.git
@@ -149,3 +142,10 @@ dotfiles:
 #    - unless: file {{ root }}/.git/config
     - require:
       - file: {{ home }}/dotfiles
+      
+{% endfor %}
+
+{% for user in pillar.get('absent_users', []) %}
+{{ user }}:
+  user.absent
+{% endfor %}
