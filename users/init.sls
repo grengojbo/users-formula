@@ -143,13 +143,28 @@ dotfiles:
       - file: {{ name }}_user
       - user: {{ name }}_user
 
-{% for dotfile in {'.ackrc', '.bash_aliases', '.gitconfig', '.hgrc', '.synergy.conf', '.tmux.conf', '.vimrc'} %}
+{% for dotfile in ['.ackrc', '.bash_aliases', '.gitconfig', '.hgrc', '.synergy.conf', '.tmux.conf', '.vimrc'] %}
 {{ home }}/{{ dotfile }}:
   file.symlink:
     - target: {{ home }}/dotfiles/{{ dotfile }}
     - require:
       - git: dotfiles
 {% endfor %}
+
+vundle:
+  git.latest:
+    - name: https://github.com/gmarik/vundle.git 
+    - target: {{ home }}/.vim/bundle/vundle
+    - runas: {{ name }}
+    - rev: master
+    - force: True
+    - force_checkout: True
+    - require:
+      - file: {{ name }}_user
+      - user: {{ name }}_user
+      - git: dotfiles
+
+# vim +BundleInstall +qall
 
 {% endfor %}
 
