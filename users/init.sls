@@ -140,7 +140,8 @@ dotfiles:
     - force: True
     - force_checkout: True
     - require:
-      - file: {{ home }}/dotfiles
+      - file: {{ name }}_user
+      - user: {{ name }}_user
 
 {% endfor %}
 
