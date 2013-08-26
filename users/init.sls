@@ -165,6 +165,7 @@ vundle:
       - git: dotfiles
 
 # vim +BundleInstall +qall
+#vim +BundleInstall +qall &>/dev/null
 
 {% endfor %}
 
