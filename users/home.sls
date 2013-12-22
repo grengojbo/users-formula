@@ -1,0 +1,3 @@
+/opt/www:
+  file:
+    - directory
