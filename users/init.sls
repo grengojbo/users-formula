@@ -159,6 +159,22 @@ ssh_auth_{{ name }}_{{ loop.index0 }}:
       - git: {{ user['dotfiles']['repository'] }}_{{ name }}
 {% endfor %}
 
+vundle:
+  git.latest:
+    - name: https://github.com/gmarik/vundle.git
+    - target: {{ home }}/.vim/bundle/vundle
+    - runas: {{ name }}
+    - rev: master
+    - force: True
+    - force_checkout: True
+    - require:
+      - file: {{ name }}_user
+      - user: {{ name }}_user
+      - git: {{ user['dotfiles']['repository'] }}_{{ name }}
+
+# vim +BundleInstall +qall
+#vim +BundleInstall +qall &>/dev/null
+
 {{ user['dotfiles']['install_cmd'] }}_{{ name }}:
   cmd.wait:
     - name: {{ user['dotfiles']['install_cmd'] }}
@@ -187,22 +203,6 @@ sudoer-{{ name }}:
   file.absent:
     - name: /etc/sudoers.d/{{ name }}
 {% endif %}
-
-vundle:
-  git.latest:
-    - name: https://github.com/gmarik/vundle.git 
-    - target: {{ home }}/.vim/bundle/vundle
-    - runas: {{ name }}
-    - rev: master
-    - force: True
-    - force_checkout: True
-    - require:
-      - file: {{ name }}_user
-      - user: {{ name }}_user
-      - git: {{ user['dotfiles']['repository'] }}_{{ name }}
-
-# vim +BundleInstall +qall
-#vim +BundleInstall +qall &>/dev/null
 
 {% endfor %}
 
