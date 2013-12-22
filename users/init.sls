@@ -27,10 +27,13 @@ include:
       - group: {{ name }}
   group.present:
     - name: {{ name }}
+    {% if 'uid' in user -%}
+    - gid: {{ user['uid'] }}
+    {% endif %}
   user.present:
     - name: {{ name }}
     - home: {{ home }}
-    - shell: {{ pillar.get('shell', '/bin/bash') }}
+    - shell: {{ user.get('shell', '/bin/bash') }}
     {% if 'uid' in user -%}
     - uid: {{ user['uid'] }}
     {% endif %}
@@ -41,6 +44,10 @@ include:
     {% if 'fullname' in user %}
     - fullname: {{ user['fullname'] }}
     {% endif %}
+    {% if 'hash' in user %}
+    - password: {{ user['hash'] }}
+    {% endif %}
+    - system: {{ user.get('system', False) }}
     - groups:
         - {{ name }}
       {% for group in user.get('groups', []) %}
@@ -120,36 +127,66 @@ ssh_auth_{{ name }}_{{ loop.index0 }}:
 {% endfor %}
 {% endif %}
 
-{% if 'sudouser' in user %}
-sudoer-{{ name }}:
-    file.append:
-        - name: /etc/sudoers
-        - text:
-          - "{{ name }}    ALL=(ALL)  NOPASSWD: ALL"
-        - require:
-          - file: sudoer-defaults
+{% if 'dotfiles' in user %}
+{{ user['dotfiles']['destination'] }}:
+  file.directory:
+    - user: {{ name }}
+    - group: {{ name }}
+    - makedirs: True
+    - require:
+      - user: {{ name }}_user
+      {% for group in user.get('groups', []) %}
+      - group: {{ group }}_group
+      {% endfor %}
 
-{% endif %}
-
-dotfiles:
+{{ user['dotfiles']['repository'] }}_{{ name }}:
   git.latest:
-    - name: https://github.com/grengojbo/dotfiles.git
-    - target: {{ home }}/dotfiles
-    - runas: {{ name }}
+    - name: {{ user['dotfiles']['repository'] }}
+    - target: {{ user['dotfiles']['destination'] }}
+    - user: {{ name }}
     - rev: master
     - force: True
     - force_checkout: True
     - require:
-      - file: {{ name }}_user
+      - file: {{ user['dotfiles']['destination'] }}
       - user: {{ name }}_user
 
 {% for dotfile in ['.ackrc', '.bash_aliases', '.gitconfig', '.hgrc', '.synergy.conf', '.tmux.conf', '.vimrc'] %}
 {{ home }}/{{ dotfile }}:
   file.symlink:
-    - target: {{ home }}/dotfiles/{{ dotfile }}
+    - target: {{ user['dotfiles']['destination'] }}/{{ dotfile }}
     - require:
-      - git: dotfiles
+      - git: {{ user['dotfiles']['repository'] }}_{{ name }}
 {% endfor %}
+
+{{ user['dotfiles']['install_cmd'] }}_{{ name }}:
+  cmd.wait:
+    - name: {{ user['dotfiles']['install_cmd'] }}
+    - user: {{ name }}
+    - cwd: {{ user['dotfiles']['destination'] }}
+    - watch:
+      - git: {{ user['dotfiles']['repository'] }}_{{ name }}
+{% endif %}
+
+{% if 'sudouser' in user and user['sudouser'] %}
+sudoer-{{ name }}:
+  file.managed:
+    - name: /etc/sudoers.d/{{ name }}
+    - user: root
+    - group: root
+    - mode: '0440'
+/etc/sudoers.d/{{ name }}:
+  file.append:
+  - text:
+    - "{{ name }}    ALL=(ALL)  NOPASSWD: ALL"
+  - require:
+    - file: sudoer-defaults
+    - file: sudoer-{{ name }}
+{% else %}
+/etc/sudoers.d/{{ name }}:
+  file.absent:
+    - name: /etc/sudoers.d/{{ name }}
+{% endif %}
 
 vundle:
   git.latest:
@@ -162,7 +199,7 @@ vundle:
     - require:
       - file: {{ name }}_user
       - user: {{ name }}_user
-      - git: dotfiles
+      - git: {{ user['dotfiles']['repository'] }}_{{ name }}
 
 # vim +BundleInstall +qall
 
@@ -171,4 +208,7 @@ vundle:
 {% for user in pillar.get('absent_users', []) %}
 {{ user }}:
   user.absent
+/etc/sudoers.d/{{ user }}:
+  file.absent:
+    - name: /etc/sudoers.d/{{ user }}
 {% endfor %}
