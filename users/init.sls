@@ -16,7 +16,7 @@ include:
     - present
 {% endfor %}
 
-{{ home_root }}_dir:
+{{ home_root }}:
   file.directory:
     - name: {{ home_root }}
     - user: root
