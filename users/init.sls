@@ -202,6 +202,7 @@ vundle:
       - git: {{ user['dotfiles']['repository'] }}_{{ name }}
 
 # vim +BundleInstall +qall
+#vim +BundleInstall +qall &>/dev/null
 
 {% endfor %}
 
