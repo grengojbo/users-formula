@@ -16,13 +16,6 @@ include:
     - present
 {% endfor %}
 
-{{ home_root }}:
-  file.directory:
-    - name: {{ home_root }}
-    - user: root
-    - group: root
-    - mode: 0755
-
 {{ name }}_user:
   file.directory:
     - name: {{ home }}
